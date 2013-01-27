@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="a4bdc939334d4c5d88d7c06783c71417" Name="Diagram1">
+        <EntityTypeShape EntityType="StrategoModel.Game" Width="1.5" PointX="3" PointY="1.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="StrategoModel.Invite" Width="1.5" PointX="3" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="StrategoModel.Player" Width="1.5" PointX="0.75" PointY="2.375" IsExpanded="true" />
+        <AssociationConnector Association="StrategoModel.FK_Game_ToPlayer_Blue" ManuallyRouted="false" />
+        <AssociationConnector Association="StrategoModel.FK_Game_ToPlayer_Red" ManuallyRouted="false" />
+        <AssociationConnector Association="StrategoModel.FK_Invite_ToPlayer_Recipient" ManuallyRouted="false" />
+        <AssociationConnector Association="StrategoModel.FK_Invite_ToPlayer_Sender" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

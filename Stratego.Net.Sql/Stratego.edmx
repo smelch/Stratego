@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="StrategoModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2008" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityContainer Name="StrategoModelStoreContainer">
+          <EntitySet Name="Game" EntityType="StrategoModel.Store.Game" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="Invite" EntityType="StrategoModel.Store.Invite" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="Player" EntityType="StrategoModel.Store.Player" store:Type="Tables" Schema="dbo" />
+          <AssociationSet Name="FK_Game_ToPlayer_Blue" Association="StrategoModel.Store.FK_Game_ToPlayer_Blue">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Game" EntitySet="Game" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Game_ToPlayer_Red" Association="StrategoModel.Store.FK_Game_ToPlayer_Red">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Game" EntitySet="Game" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Invite_ToPlayer_Recipient" Association="StrategoModel.Store.FK_Invite_ToPlayer_Recipient">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Invite" EntitySet="Invite" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Invite_ToPlayer_Sender" Association="StrategoModel.Store.FK_Invite_ToPlayer_Sender">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Invite" EntitySet="Invite" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="Game">
+          <Key>
+            <PropertyRef Name="GameId" />
+          </Key>
+          <Property Name="GameId" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="RedPlayerId" Type="int" Nullable="false" />
+          <Property Name="BluePlayerId" Type="int" Nullable="false" />
+          <Property Name="GameState" Type="binary" Nullable="false" MaxLength="400" />
+        </EntityType>
+        <EntityType Name="Invite">
+          <Key>
+            <PropertyRef Name="InviteId" />
+          </Key>
+          <Property Name="InviteId" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="SenderId" Type="int" Nullable="false" />
+          <Property Name="RecipientId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Player">
+          <Key>
+            <PropertyRef Name="PlayerId" />
+          </Key>
+          <Property Name="PlayerId" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="Password" Type="varchar" Nullable="false" MaxLength="64" />
+        </EntityType>
+        <Association Name="FK_Game_ToPlayer_Blue">
+          <End Role="Player" Type="StrategoModel.Store.Player" Multiplicity="1" />
+          <End Role="Game" Type="StrategoModel.Store.Game" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Game">
+              <PropertyRef Name="BluePlayerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Game_ToPlayer_Red">
+          <End Role="Player" Type="StrategoModel.Store.Player" Multiplicity="1" />
+          <End Role="Game" Type="StrategoModel.Store.Game" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Game">
+              <PropertyRef Name="RedPlayerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Invite_ToPlayer_Recipient">
+          <End Role="Player" Type="StrategoModel.Store.Player" Multiplicity="1" />
+          <End Role="Invite" Type="StrategoModel.Store.Invite" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Invite">
+              <PropertyRef Name="RecipientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Invite_ToPlayer_Sender">
+          <End Role="Player" Type="StrategoModel.Store.Player" Multiplicity="1" />
+          <End Role="Invite" Type="StrategoModel.Store.Invite" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Invite">
+              <PropertyRef Name="SenderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="StrategoModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="StrategoEntities" p1:LazyLoadingEnabled="true">
+          <EntitySet Name="Games" EntityType="StrategoModel.Game" />
+          <EntitySet Name="Invites" EntityType="StrategoModel.Invite" />
+          <EntitySet Name="Players" EntityType="StrategoModel.Player" />
+          <AssociationSet Name="FK_Game_ToPlayer_Blue" Association="StrategoModel.FK_Game_ToPlayer_Blue">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Game" EntitySet="Games" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Game_ToPlayer_Red" Association="StrategoModel.FK_Game_ToPlayer_Red">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Game" EntitySet="Games" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Invite_ToPlayer_Recipient" Association="StrategoModel.FK_Invite_ToPlayer_Recipient">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Invite" EntitySet="Invites" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Invite_ToPlayer_Sender" Association="StrategoModel.FK_Invite_ToPlayer_Sender">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Invite" EntitySet="Invites" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="Game">
+          <Key>
+            <PropertyRef Name="GameId" />
+          </Key>
+          <Property Name="GameId" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="RedPlayerId" Type="Int32" Nullable="false" />
+          <Property Name="BluePlayerId" Type="Int32" Nullable="false" />
+          <Property Name="GameState" Type="Binary" Nullable="false" MaxLength="400" FixedLength="true" />
+          <NavigationProperty Name="BluePlayer" Relationship="StrategoModel.FK_Game_ToPlayer_Blue" FromRole="Game" ToRole="Player" />
+          <NavigationProperty Name="RedPlayer" Relationship="StrategoModel.FK_Game_ToPlayer_Red" FromRole="Game" ToRole="Player" />
+        </EntityType>
+        <EntityType Name="Invite">
+          <Key>
+            <PropertyRef Name="InviteId" />
+          </Key>
+          <Property Name="InviteId" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="SenderId" Type="Int32" Nullable="false" />
+          <Property Name="RecipientId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Recipient" Relationship="StrategoModel.FK_Invite_ToPlayer_Recipient" FromRole="Invite" ToRole="Player" />
+          <NavigationProperty Name="Sender" Relationship="StrategoModel.FK_Invite_ToPlayer_Sender" FromRole="Invite" ToRole="Player" />
+        </EntityType>
+        <EntityType Name="Player">
+          <Key>
+            <PropertyRef Name="PlayerId" />
+          </Key>
+          <Property Name="PlayerId" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="BlueGames" Relationship="StrategoModel.FK_Game_ToPlayer_Blue" FromRole="Player" ToRole="Game" />
+          <NavigationProperty Name="RedGames" Relationship="StrategoModel.FK_Game_ToPlayer_Red" FromRole="Player" ToRole="Game" />
+          <NavigationProperty Name="ReceivedInvites" Relationship="StrategoModel.FK_Invite_ToPlayer_Recipient" FromRole="Player" ToRole="Invite" />
+          <NavigationProperty Name="SentInvites" Relationship="StrategoModel.FK_Invite_ToPlayer_Sender" FromRole="Player" ToRole="Invite" />
+          <Property Type="String" Name="Password" Nullable="false" MaxLength="64" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <Association Name="FK_Game_ToPlayer_Blue">
+          <End Role="Player" Type="StrategoModel.Player" Multiplicity="1" />
+          <End Role="Game" Type="StrategoModel.Game" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Game">
+              <PropertyRef Name="BluePlayerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Game_ToPlayer_Red">
+          <End Role="Player" Type="StrategoModel.Player" Multiplicity="1" />
+          <End Role="Game" Type="StrategoModel.Game" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Game">
+              <PropertyRef Name="RedPlayerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Invite_ToPlayer_Recipient">
+          <End Role="Player" Type="StrategoModel.Player" Multiplicity="1" />
+          <End Role="Invite" Type="StrategoModel.Invite" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Invite">
+              <PropertyRef Name="RecipientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Invite_ToPlayer_Sender">
+          <End Role="Player" Type="StrategoModel.Player" Multiplicity="1" />
+          <End Role="Invite" Type="StrategoModel.Invite" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="PlayerId" />
+            </Principal>
+            <Dependent Role="Invite">
+              <PropertyRef Name="SenderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="StrategoModelStoreContainer" CdmEntityContainer="StrategoEntities">
+          <EntitySetMapping Name="Games">
+            <EntityTypeMapping TypeName="StrategoModel.Game">
+              <MappingFragment StoreEntitySet="Game">
+                <ScalarProperty Name="GameId" ColumnName="GameId" />
+                <ScalarProperty Name="RedPlayerId" ColumnName="RedPlayerId" />
+                <ScalarProperty Name="BluePlayerId" ColumnName="BluePlayerId" />
+                <ScalarProperty Name="GameState" ColumnName="GameState" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Invites">
+            <EntityTypeMapping TypeName="StrategoModel.Invite">
+              <MappingFragment StoreEntitySet="Invite">
+                <ScalarProperty Name="InviteId" ColumnName="InviteId" />
+                <ScalarProperty Name="SenderId" ColumnName="SenderId" />
+                <ScalarProperty Name="RecipientId" ColumnName="RecipientId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Players">
+            <EntityTypeMapping TypeName="StrategoModel.Player">
+              <MappingFragment StoreEntitySet="Player">
+                <ScalarProperty Name="Password" ColumnName="Password" />
+                <ScalarProperty Name="PlayerId" ColumnName="PlayerId" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
