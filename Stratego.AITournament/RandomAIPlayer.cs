@@ -31,13 +31,7 @@ namespace Stratego.AITournament
                     {
                         if (_game.GetPiece(new Stratego.Core.Point(x, y)) == GamePiece.Empty)
                         {
-                            int r = rand.Next(pieces.Count);
-                            _game.PlacePiece(pieces[r].Key, new Stratego.Core.Point(x, y));
-                            pieces[r] = new KeyValuePair<GamePiece, int>(pieces[r].Key, pieces[r].Value - 1);
-                            if (pieces[r].Value == 0)
-                            {
-                                pieces.RemoveAt(r);
-                            }
+                            PlacePiece(rand, pieces, x, y);
                         }
                     }
                 }
@@ -47,16 +41,21 @@ namespace Stratego.AITournament
                     {
                         if (_game.GetPiece(new Stratego.Core.Point(x, y)) == GamePiece.Empty)
                         {
-                            int r = rand.Next(pieces.Count);
-                            _game.PlacePiece(pieces[r].Key, new Stratego.Core.Point(x, y));
-                            pieces[r] = new KeyValuePair<GamePiece, int>(pieces[r].Key, pieces[r].Value - 1);
-                            if (pieces[r].Value == 0)
-                            {
-                                pieces.RemoveAt(r);
-                            }
+                            PlacePiece(rand, pieces, x, y);
                         }
                     }
                 }
+            }
+        }
+
+        private void PlacePiece(Random rand, List<KeyValuePair<GamePiece, int>> pieces, int x, int y)
+        {
+            int r = rand.Next(pieces.Count);
+            _game.PlacePiece(pieces[r].Key, new Stratego.Core.Point(x, y));
+            pieces[r] = new KeyValuePair<GamePiece, int>(pieces[r].Key, pieces[r].Value - 1);
+            if (pieces[r].Value == 0)
+            {
+                pieces.RemoveAt(r);
             }
         }
 
