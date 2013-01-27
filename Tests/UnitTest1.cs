@@ -11,6 +11,7 @@ namespace Tests
         public void TestAIPlayers()
         {
             var tourney = new AITournament<RandomAIPlayer, RandomAIPlayer>();
+            Assert.Inconclusive();
         }
     }
 }

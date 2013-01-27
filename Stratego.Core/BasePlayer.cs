@@ -9,11 +9,13 @@ namespace Stratego.Core
     {
         protected StrategoGame _game;
         protected PlayerTurn _playerColor;
+        public bool IsRed { get; private set; }
 
         public BasePlayer(StrategoGame game, PlayerTurn playerColor)
         {
             _game = game;
             _playerColor = playerColor;
+            IsRed = playerColor == PlayerTurn.Red;
         }
 
         public abstract void BeginTurn();

@@ -20,6 +20,8 @@ namespace Stratego.AITournament
             Red.PlacePieces();
             Blue.PlacePieces();
 
+            game.EndSetup();
+
             while (!game.IsOver)
             {
                 Red.BeginTurn();

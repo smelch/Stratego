@@ -83,7 +83,7 @@ namespace Stratego.Core
                 {
                     throw new Exception("Destination is occupied.");
                 }
-
+                state.Board[to.x, to.y] = piece;
                 state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
                 return true;
             }
@@ -100,26 +100,31 @@ namespace Stratego.Core
             if (IsValidMove(attacker, from, to))
             {
                 bool? success = null;
-                if (defender == GamePiece.Bomb) { success = attacker == GamePiece.Eight; }
-                else if (attacker == GamePiece.Spy) { success = true; }
-                else if (defender == GamePiece.Flag) { success = true; }
-                else if (defender == GamePiece.Spy) { success = true; }
+                
+                if (defender.GetPieceType() == GamePiece.Bomb) { success = attacker.GetPieceType() == GamePiece.Eight; }
+                else if (attacker.GetPieceType() == GamePiece.Spy) { success = true; }
+                else if (defender.GetPieceType() == GamePiece.Flag) { success = true; }
+                else if (defender.GetPieceType() == GamePiece.Spy) { success = true; }
 
-                if ((success.HasValue && success.Value) || (!success.HasValue && attacker < defender))
+                if ((success.HasValue && success.Value) || (!success.HasValue && attacker.GetPieceType() < defender.GetPieceType()))
                 {
-                    if (defender == GamePiece.Flag)
+                    if (defender.GetPieceType() == GamePiece.Flag)
                     {
                         IsOver = true;
                     }
                     RemovePiece(to);
+                    state.Board[from.x, from.y] = 0;
                     state.Board[to.x, to.y] = attacker;
                 }
-
-                if (!success.HasValue && attacker == defender)
+                else
                 {
-                    RemovePiece(to);
+                    RemovePiece(from);
+                    if (!success.HasValue && attacker.GetPieceType() == defender.GetPieceType())
+                    {
+                        RemovePiece(to);
+                    }
                 }
-
+                state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
                 return defender;
             }
             else
@@ -131,6 +136,11 @@ namespace Stratego.Core
         public bool IsValidMove(GamePiece Piece, Point from, Point to)
         {
             if (this.IsOver)
+            {
+                return false;
+            }
+
+            if (to.x < 0 || to.x > 9 || to.y < 0 || to.y > 9)
             {
                 return false;
             }

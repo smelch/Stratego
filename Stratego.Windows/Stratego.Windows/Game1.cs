@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
+using Stratego.AITournament;
 using Stratego.Core;
 
 namespace Stratego.Windows
@@ -23,6 +24,9 @@ namespace Stratego.Windows
         SpriteBatch spriteBatch;
         StrategoGame stratego;
         Texture2D pixel;
+        BasePlayer Red, Blue;
+        double timer = 0;
+        double timedSpeed = 1;
         
         bool playerIsRed = true;
 
@@ -98,8 +102,10 @@ namespace Stratego.Windows
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             stratego = new StrategoGame();
-            stratego.PlacePiece(GamePiece.One | GamePiece.Red, new Stratego.Core.Point(2, 8));
-            stratego.PlacePiece(GamePiece.Spy, new Stratego.Core.Point(4, 3));
+            Red = new RandomAIPlayer(stratego, PlayerTurn.Red);
+            Blue = new RandomAIPlayer(stratego, PlayerTurn.Blue);
+            Red.PlacePieces();
+            Blue.PlacePieces();
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
@@ -172,40 +178,54 @@ namespace Stratego.Windows
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            if (!Guide.IsVisible)
+            if (!Guide.IsVisible && !stratego.IsOver)
             {
-                if (Player1 == null)
+                timer += gameTime.ElapsedGameTime.TotalMilliseconds;
+                while (timer > timedSpeed && !stratego.IsOver)
                 {
-                    Guide.ShowSignIn(1, false);
-                }
-                else
-                {
-                    //Guide.ShowGameInvite(PlayerIndex.One, null);
-                }
-                // Allows the game to exit
-                if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                    this.Exit();
-
-                if (Keyboard.GetState().IsKeyDown(Keys.Space))
-                {
-                    if (!spaceDown)
+                    playerIsRed = !playerIsRed;
+                    if (playerIsRed)
                     {
-                        spaceDown = true;
-                        playerIsRed = !playerIsRed;
+                        Red.BeginTurn();
                     }
+                    else
+                    {
+                        Blue.BeginTurn();
+                    }
+                    timer -= timedSpeed;
                 }
-                else
-                {
-                    spaceDown = false;
-                }
+                //if (Player1 == null)
+                //{
+                //    Guide.ShowSignIn(1, false);
+                //}
+                //else
+                //{
+                //    //Guide.ShowGameInvite(PlayerIndex.One, null);
+                //}
+                //// Allows the game to exit
+                //if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+                //    this.Exit();
 
-                if (Keyboard.GetState().IsKeyDown(Keys.F2))
-                {
-                    RandomizeRemainingPieces();
-                    stratego.EndSetup();
-                }
+                //if (Keyboard.GetState().IsKeyDown(Keys.Space))
+                //{
+                //    if (!spaceDown)
+                //    {
+                //        spaceDown = true;
+                //        playerIsRed = !playerIsRed;
+                //    }
+                //}
+                //else
+                //{
+                //    spaceDown = false;
+                //}
 
-                HandleMouse();
+                //if (Keyboard.GetState().IsKeyDown(Keys.F2))
+                //{
+                //    RandomizeRemainingPieces();
+                //    stratego.EndSetup();
+                //}
+
+                //HandleMouse();
             }
             base.Update(gameTime);
         }
@@ -332,7 +352,7 @@ namespace Stratego.Windows
                         {
                             ShowAttack(ActivePiece, piece);
                         }
-                        stratego.MovePiece(new Stratego.Core.Point(x, y), new Stratego.Core.Point(X, Y));
+                        stratego.Move(new Stratego.Core.Point(x, y), new Stratego.Core.Point(X, Y));
                     }
                 }
             });
@@ -469,7 +489,7 @@ namespace Stratego.Windows
                 for (int y = 0; y < 10; y++)
                 {
                     var piece = stratego.GetPiece(new Stratego.Core.Point(x, y));
-                    DrawPiece(rect.X, rect.Y, piece);
+                    DrawPiece(rect.X, rect.Y, piece, false);
                     rect.Y += grid_size;
                 }
                 rect.Y = 0;

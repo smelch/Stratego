@@ -117,6 +117,10 @@
     <Content Include="GameThumbnail.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Stratego.AITournament\Stratego.AITournament.csproj">
+      <Project>{4fa2813c-b7ba-42e5-99fd-ded2f505737b}</Project>
+      <Name>Stratego.AITournament</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Stratego.Core\Stratego.Core.csproj">
       <Project>{d4b2b4f7-1e8f-4a08-ad14-4a00ec61497e}</Project>
       <Name>Stratego.Core</Name>
