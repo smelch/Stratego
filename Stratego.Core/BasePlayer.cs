@@ -22,9 +22,9 @@ namespace Stratego.Core
 
         public abstract void BeginTurn();
 
-        public abstract void PlayerMoved(Point from, Point to);
+        public abstract void PlayerMoved(BasePlayer player, Point from, Point to);
 
-        public abstract void PlayerAttacked(Point from, Point to, GamePieceType piece, AttackResult result);
+        public abstract void PlayerAttacked(BasePlayer player, Point from, Point to, GamePieceType piece, AttackResult result);
 
         public abstract void PlacePieces();
     }

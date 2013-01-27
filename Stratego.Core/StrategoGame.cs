@@ -94,12 +94,14 @@ namespace Stratego.Core
                 if (state.Turn == PlayerTurn.Red)
                 {
                     state.Turn = PlayerTurn.Blue;
-                    Blue.PlayerMoved(from, to);
+                    Blue.PlayerMoved(Red, from, to);
+                    Red.PlayerMoved(Red, from, to);
                 }
                 else
                 {
                     state.Turn = PlayerTurn.Red;
-                    Red.PlayerMoved(from, to);
+                    Red.PlayerMoved(Blue, from, to);
+                    Blue.PlayerMoved(Blue, from, to);
                 }
 
                 return true;
@@ -129,6 +131,7 @@ namespace Stratego.Core
                     if (defender.Type == GamePieceType.Flag)
                     {
                         this.IsOver = true;
+                        return result;
                     }
                     break;
                 case AttackResult.Lose:
@@ -143,12 +146,14 @@ namespace Stratego.Core
             if (state.Turn == PlayerTurn.Red)
             {
                 state.Turn = PlayerTurn.Blue;
-                Blue.PlayerAttacked(from, to, attacker.Type, result);
+                Blue.PlayerAttacked(Red, from, to, attacker.Type, result);
+                Red.PlayerAttacked(Red, from, to, defender.Type, result);
             }
             else
             {
                 state.Turn = PlayerTurn.Red;
-                Red.PlayerAttacked(from, to, attacker.Type, result);
+                Red.PlayerAttacked(Blue, from, to, attacker.Type, result);
+                Blue.PlayerAttacked(Blue, from, to, defender.Type, result);
             }
             return result;
         }
@@ -273,5 +278,11 @@ namespace Stratego.Core
         }
 
         public bool IsOver { get; set; }
+
+        public void Surrender()
+        {
+            state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
+            this.IsOver = true;
+        }
     }
 }

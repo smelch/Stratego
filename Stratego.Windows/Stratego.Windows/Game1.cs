@@ -26,7 +26,7 @@ namespace Stratego.Windows
         Texture2D pixel;
         BasePlayer Red, Blue;
         double timer = 0;
-        double timedSpeed = 10;
+        double timedSpeed = 2;
         
         bool playerIsRed = true;
 
@@ -37,6 +37,9 @@ namespace Stratego.Windows
         private GamePiece ActivePiece;
         private bool mouseDown;
         private NetworkSession session;
+        private int redWins;
+        private int totalGames;
+        private double ratio;
         
 
         public Game1()
@@ -101,14 +104,8 @@ namespace Stratego.Windows
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            stratego = new StrategoGame();
-            Red = new RandomAIPlayer(stratego, PlayerTurn.Red);
-            Blue = new RandomAIPlayer(stratego, PlayerTurn.Blue);
-            stratego.Red = Red;
-            stratego.Blue = Blue;
-            Red.PlacePieces();
-            Blue.PlacePieces();
-            stratego.EndSetup();
+            StartNewGame();
+
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
@@ -143,6 +140,19 @@ namespace Stratego.Windows
             }
 
             // TODO: use this.Content to load your game content here
+        }
+
+        private void StartNewGame()
+        {
+            playerIsRed = true;
+            stratego = new StrategoGame();
+            Red = new RetreatAIPlayer(stratego, PlayerTurn.Red);
+            Blue = new RandomAIPlayer(stratego, PlayerTurn.Blue);
+            stratego.Red = Red;
+            stratego.Blue = Blue;
+            Red.PlacePieces();
+            Blue.PlacePieces();
+            stratego.EndSetup();
         }
 
         private Texture2D RenderPieceTexture(int width, int height, GamePieceType gamePiece, bool isRed)
@@ -192,6 +202,14 @@ namespace Stratego.Windows
                     }
                     playerIsRed = !playerIsRed;
                     timer -= timedSpeed;
+                }
+
+                if (stratego.IsOver)
+                {
+                    redWins += (stratego.GetTurn() == PlayerTurn.Red) ? 1 : 0;
+                    totalGames++;
+                    ratio = (double)redWins / (double)totalGames;
+                    StartNewGame();
                 }
                 //if (Player1 == null)
                 //{

@@ -35,22 +35,32 @@ namespace Stratego.Core
             }
         }
 
-        public override void PlayerMoved(Point from, Point to)
+        public override void PlayerMoved(BasePlayer player, Point from, Point to)
         {
             EstimatedState[to.x, to.y] = EstimatedState[from.x, from.y];
             EstimatedState[from.x, from.y] = null;
         }
 
-        public override void PlayerAttacked(Point from, Point to, GamePieceType piece, AttackResult result)
+        public override void PlayerAttacked(BasePlayer player, Point from, Point to, GamePieceType piece, AttackResult result)
         {
             EstimatedState[from.x, from.y] = null;
             if (result == AttackResult.Win)
             {
-                EstimatedState[to.x, to.y] = GamePieceFactory.Create(piece, !this.IsRed);
+                if (player != this)
+                {
+                    EstimatedState[to.x, to.y] = GamePieceFactory.Create(piece, !this.IsRed);
+                }
             }
             else if (result == AttackResult.Tie)
             {
                 EstimatedState[to.x, to.y] = null;
+            }
+            else if (result == AttackResult.Lose)
+            {
+                if (player == this)
+                {
+                    EstimatedState[to.x, to.y] = GamePieceFactory.Create(piece, !this.IsRed);
+                }
             }
         }
     }
