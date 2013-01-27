@@ -26,14 +26,14 @@ namespace Stratego.Windows
         Texture2D pixel;
         BasePlayer Red, Blue;
         double timer = 0;
-        double timedSpeed = 1;
+        double timedSpeed = 10;
         
         bool playerIsRed = true;
 
-        Dictionary<GamePiece, string> Text;
+        Dictionary<GamePieceType, string> Text;
         SpriteFont Font;
         private bool spaceDown;
-        private Dictionary<GamePiece, Texture2D> PieceTextures;
+        private Dictionary<GamePieceType, Texture2D> RedPieceTextures, BluePieceTextures;
         private GamePiece ActivePiece;
         private bool mouseDown;
         private NetworkSession session;
@@ -104,55 +104,54 @@ namespace Stratego.Windows
             stratego = new StrategoGame();
             Red = new RandomAIPlayer(stratego, PlayerTurn.Red);
             Blue = new RandomAIPlayer(stratego, PlayerTurn.Blue);
+            stratego.Red = Red;
+            stratego.Blue = Blue;
             Red.PlacePieces();
             Blue.PlacePieces();
+            stratego.EndSetup();
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData<Color>(new Color[] { Color.White });
             Font = Content.Load<SpriteFont>("PieceFont");
 
-            Text = new Dictionary<GamePiece, string>() {
-                { GamePiece.One, "1" },
-                { GamePiece.Two, "2" },
-                { GamePiece.Three, "3" },
-                { GamePiece.Four, "4" },
-                { GamePiece.Five, "5" },
-                { GamePiece.Six, "6" },
-                { GamePiece.Seven, "7" },
-                { GamePiece.Eight, "8" },
-                { GamePiece.Nine, "9" },
-                { GamePiece.Bomb, "B" },
-                { GamePiece.Spy, "S" },
-                { GamePiece.Flag, "F" }
+            Text = new Dictionary<GamePieceType, string>() {
+                { GamePieceType.One, "1" },
+                { GamePieceType.Two, "2" },
+                { GamePieceType.Three, "3" },
+                { GamePieceType.Four, "4" },
+                { GamePieceType.Five, "5" },
+                { GamePieceType.Six, "6" },
+                { GamePieceType.Seven, "7" },
+                { GamePieceType.Eight, "8" },
+                { GamePieceType.Nine, "9" },
+                { GamePieceType.Bomb, "B" },
+                { GamePieceType.Spy, "S" },
+                { GamePieceType.Flag, "F" }
             };
 
-            PieceTextures = new Dictionary<GamePiece, Texture2D>();
-            foreach (GamePiece piece in Enum.GetValues(typeof(GamePiece)))
+            RedPieceTextures = new Dictionary<GamePieceType, Texture2D>();
+            BluePieceTextures = new Dictionary<GamePieceType, Texture2D>();
+
+            foreach (GamePieceType piece in Enum.GetValues(typeof(GamePieceType)))
             {
-                if (piece != GamePiece.Red && piece != GamePiece.Empty && piece != GamePiece.Hidden)
+                BluePieceTextures.Add(piece, RenderPieceTexture(GRID_SIZE, GRID_SIZE, piece, false));
+                if (piece != GamePieceType.Block)
                 {
-                    PieceTextures.Add(piece, RenderPieceTexture(GRID_SIZE, GRID_SIZE, piece));
-                    if (piece != GamePiece.Block)
-                    {
-                        PieceTextures.Add(piece | GamePiece.Red, RenderPieceTexture(GRID_SIZE, GRID_SIZE, piece | GamePiece.Red));
-                    }
+                    RedPieceTextures.Add(piece, RenderPieceTexture(GRID_SIZE, GRID_SIZE, piece, true));
                 }
             }
-
-            RedTexture = RenderPieceTexture(GRID_SIZE, GRID_SIZE, GamePiece.Hidden | GamePiece.Red);
-            BlueTexture = RenderPieceTexture(GRID_SIZE, GRID_SIZE, GamePiece.Hidden);
 
             // TODO: use this.Content to load your game content here
         }
 
-        private Texture2D RenderPieceTexture(int width, int height, GamePiece gamePiece)
+        private Texture2D RenderPieceTexture(int width, int height, GamePieceType gamePiece, bool isRed)
         {
             Texture2D texture = new Texture2D(GraphicsDevice, width, height);
             var renderTarget = new RenderTarget2D(GraphicsDevice, width, height);
             GraphicsDevice.SetRenderTarget(renderTarget);
             spriteBatch.Begin();
-            RenderPiece(width, gamePiece);
+            RenderPiece(width, gamePiece, isRed);
             spriteBatch.End();
             GraphicsDevice.SetRenderTarget(null);
 
@@ -183,7 +182,6 @@ namespace Stratego.Windows
                 timer += gameTime.ElapsedGameTime.TotalMilliseconds;
                 while (timer > timedSpeed && !stratego.IsOver)
                 {
-                    playerIsRed = !playerIsRed;
                     if (playerIsRed)
                     {
                         Red.BeginTurn();
@@ -192,6 +190,7 @@ namespace Stratego.Windows
                     {
                         Blue.BeginTurn();
                     }
+                    playerIsRed = !playerIsRed;
                     timer -= timedSpeed;
                 }
                 //if (Player1 == null)
@@ -234,7 +233,7 @@ namespace Stratego.Windows
         {
             Random rand = new Random();
 
-            List<KeyValuePair<GamePiece, int>> pieces = stratego.GetAvailablePieces(false);
+            List<KeyValuePair<GamePieceType, int>> pieces = stratego.GetAvailablePieces(false);
             for (int i = 0; i < pieces.Count; i++)
             {
                 if (pieces[i].Value == 0)
@@ -247,11 +246,11 @@ namespace Stratego.Windows
             {
                 for (int y = 0; y < 4; y++)
                 {
-                    if (stratego.GetPiece(new Stratego.Core.Point(x, y)) == GamePiece.Empty)
+                    if (stratego.GetPiece(new Stratego.Core.Point(x, y)) == null)
                     {
                         int r = rand.Next(pieces.Count - 1);
-                        stratego.PlacePiece(pieces[r].Key, new Stratego.Core.Point(x, y));
-                        pieces[r] = new KeyValuePair<GamePiece, int>(pieces[r].Key, pieces[r].Value - 1);
+                        stratego.PlacePiece(pieces[r].Key, false, new Stratego.Core.Point(x, y));
+                        pieces[r] = new KeyValuePair<GamePieceType, int>(pieces[r].Key, pieces[r].Value - 1);
                         if (pieces[r].Value == 0)
                         {
                             pieces.RemoveAt(r);
@@ -272,11 +271,11 @@ namespace Stratego.Windows
             {
                 for (int y = 6; y < 10; y++)
                 {
-                    if (stratego.GetPiece(new Stratego.Core.Point(x, y)) == GamePiece.Empty)
+                    if (stratego.GetPiece(new Stratego.Core.Point(x, y)) == null)
                     {
                         int r = rand.Next(pieces.Count - 1);
-                        stratego.PlacePiece(pieces[r].Key, new Stratego.Core.Point(x, y));
-                        pieces[r] = new KeyValuePair<GamePiece, int>(pieces[r].Key, pieces[r].Value - 1);
+                        stratego.PlacePiece(pieces[r].Key, true, new Stratego.Core.Point(x, y));
+                        pieces[r] = new KeyValuePair<GamePieceType, int>(pieces[r].Key, pieces[r].Value - 1);
                         if (pieces[r].Value == 0)
                         {
                             pieces.RemoveAt(r);
@@ -311,7 +310,7 @@ namespace Stratego.Windows
             {
                 if (mouseDown)
                 {
-                    if (ActivePiece != GamePiece.Empty)
+                    if (ActivePiece != null)
                     {
                         int x = (int)(state.X / GRID_SIZE);
                         int y = (int)(state.Y / GRID_SIZE);
@@ -320,7 +319,7 @@ namespace Stratego.Windows
                         {
                             DropPiece(x, y);
                         }
-                        ActivePiece = GamePiece.Empty;
+                        ActivePiece = null;
                     }
 
                     mouseDown = false;
@@ -337,10 +336,10 @@ namespace Stratego.Windows
                 if (stratego.GetTurn() == PlayerTurn.Setup)
                 {
                     stratego.RemovePiece(new Stratego.Core.Point(x, y));
-                    if (!stratego.PlacePiece(ActivePiece, new Stratego.Core.Point(X, Y)))
+                    if (!stratego.PlacePiece(ActivePiece.Type, ActivePiece.IsRed, new Stratego.Core.Point(X, Y)))
                     {
-                        stratego.PlacePiece(ActivePiece, new Stratego.Core.Point(x, y));
-                        ActivePiece = GamePiece.Empty;
+                        stratego.PlacePiece(ActivePiece.Type, ActivePiece.IsRed, new Stratego.Core.Point(x, y));
+                        ActivePiece = null;
                     }
                 }
                 else
@@ -348,7 +347,7 @@ namespace Stratego.Windows
                     if (stratego.IsValidMove(ActivePiece, new Stratego.Core.Point(x, y), new Stratego.Core.Point(X, Y)))
                     {
                         var piece = stratego.GetPiece(new Stratego.Core.Point(X, Y));
-                        if (piece != GamePiece.Empty)
+                        if (piece != null)
                         {
                             ShowAttack(ActivePiece, piece);
                         }
@@ -377,39 +376,38 @@ namespace Stratego.Windows
                 PieceDropAction(x, y);
                 PieceDropAction = null;
             }
-            ActivePiece = GamePiece.Empty;
+            ActivePiece = null;
         }
 
         private void HandleMouseForBank(MouseState state)
         {
-            GamePiece piece = GamePiece.Empty;
+            GamePieceType piece = GamePieceType.Empty;
             if (state.X <= 548 && state.Y <= 432)
             {
                 int offset = (int)state.Y / 48 + 1;
-                piece = (GamePiece)offset;
-                piece |= (playerIsRed) ? GamePiece.Red : GamePiece.Empty;
+                piece = (GamePieceType)offset;
             }
+
             if (state.X >= 600 && state.X <= 648 && state.Y <= 144)
             {
                 int offset = (int)state.Y / 48;
                 switch (offset)
                 {
                     case 0:
-                        piece = GamePiece.Spy;
+                        piece = GamePieceType.Spy;
                         break;
                     case 1:
-                        piece = GamePiece.Bomb;
+                        piece = GamePieceType.Bomb;
                         break;
                     case 2:
-                        piece = GamePiece.Flag;
+                        piece = GamePieceType.Flag;
                         break;
                 }
-                piece |= (playerIsRed) ? GamePiece.Red : GamePiece.Empty;
             }
 
-            if (piece != GamePiece.Empty)
+            if (piece != GamePieceType.Empty)
             {
-                PickUpPiece(piece, (X, Y) => stratego.PlacePiece(ActivePiece, new Stratego.Core.Point(X, Y)));
+                PickUpPiece(GamePieceFactory.Create(piece, playerIsRed), (X, Y) => stratego.PlacePiece(ActivePiece.Type, playerIsRed, new Stratego.Core.Point(X, Y)));
             }
         }
 
@@ -440,42 +438,43 @@ namespace Stratego.Windows
 
         private void DrawLastAttack()
         {
-            if (LastAttacker != GamePiece.Empty)
+            if (LastAttacker != null)
             {
-                DrawPiece(500, 48, LastAttacker, false);
-                DrawPiece(550, 48, LastDefender, false);
+                DrawPiece(500, 48, LastAttacker.Type, LastAttacker.IsRed, false);
+                DrawPiece(550, 48, LastDefender.Type, LastDefender.IsRed, false);
             }
         }
 
         private void DrawActivePiece()
         {
-            if(ActivePiece != GamePiece.Empty) {
+            if(ActivePiece != null) {
+                var t = (ActivePiece.IsRed) ? RedPieceTextures : BluePieceTextures;
                 int x = Mouse.GetState().X - GRID_SIZE / 2;
                 int y = Mouse.GetState().Y - GRID_SIZE / 2;
-                spriteBatch.Draw(PieceTextures[ActivePiece], new Vector2(x, y), new Color(1, 1, 1, 0.5f));
+                spriteBatch.Draw(t[ActivePiece.Type], new Vector2(x, y), new Color(1, 1, 1, 0.5f));
             }
         }
 
         private void DrawPieceBank()
         {
-            DrawBankItem(GamePiece.One | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 0);
-            DrawBankItem(GamePiece.Two | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 48);
-            DrawBankItem(GamePiece.Three | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 96);
-            DrawBankItem(GamePiece.Four | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 144);
-            DrawBankItem(GamePiece.Five | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 192);
-            DrawBankItem(GamePiece.Six | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 240);
-            DrawBankItem(GamePiece.Seven | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 288);
-            DrawBankItem(GamePiece.Eight | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 336);
-            DrawBankItem(GamePiece.Nine | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 500, 384);
-            DrawBankItem(GamePiece.Spy | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 596, 0);
-            DrawBankItem(GamePiece.Bomb | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 596, 48);
-            DrawBankItem(GamePiece.Flag | (playerIsRed ? GamePiece.Red : GamePiece.Empty), 596, 96);
+            DrawBankItem(GamePieceType.One, 500, 0);
+            DrawBankItem(GamePieceType.Two, 500, 48);
+            DrawBankItem(GamePieceType.Three, 500, 96);
+            DrawBankItem(GamePieceType.Four, 500, 144);
+            DrawBankItem(GamePieceType.Five, 500, 192);
+            DrawBankItem(GamePieceType.Six, 500, 240);
+            DrawBankItem(GamePieceType.Seven, 500, 288);
+            DrawBankItem(GamePieceType.Eight, 500, 336);
+            DrawBankItem(GamePieceType.Nine, 500, 384);
+            DrawBankItem(GamePieceType.Spy, 596, 0);
+            DrawBankItem(GamePieceType.Bomb, 596, 48);
+            DrawBankItem(GamePieceType.Flag, 596, 96);
         }
 
-        private void DrawBankItem(GamePiece piece, int x, int y)
+        private void DrawBankItem(GamePieceType piece, int x, int y)
         {
-            DrawPiece(x, y, piece);
-            string text = stratego.GetAvailablePieces(piece).ToString();
+            DrawPiece(x, y, piece, playerIsRed);
+            string text = stratego.GetAvailablePieces(piece, playerIsRed).ToString();
             var size = Font.MeasureString(text);
             spriteBatch.DrawString(Font, text, new Vector2(x + 72 - size.X / 2, y + (GRID_SIZE - size.Y) / 2), Color.White);
         }
@@ -489,7 +488,10 @@ namespace Stratego.Windows
                 for (int y = 0; y < 10; y++)
                 {
                     var piece = stratego.GetPiece(new Stratego.Core.Point(x, y));
-                    DrawPiece(rect.X, rect.Y, piece, false);
+                    if (piece != null)
+                    {
+                        DrawPiece(rect.X, rect.Y, piece.Type, piece.IsRed, false);
+                    }
                     rect.Y += grid_size;
                 }
                 rect.Y = 0;
@@ -497,37 +499,33 @@ namespace Stratego.Windows
             }
         }
 
-        private void DrawPiece(int x, int y, GamePiece piece, bool hideOtherColor = true)
+        private void DrawPiece(int x, int y, GamePieceType piece, bool isRed, bool hideOtherColor = true)
         {
-            if (piece != GamePiece.Empty)
+            if (piece != null)
             {
                 Texture2D texture = null;
                 if (!piece.IsBlock() && hideOtherColor)
                 {
-                    if (piece.IsRed() && !playerIsRed)
+                    if (isRed != playerIsRed)
                     {
-                        texture = RedTexture;
-                    }
-                    else if(!piece.IsRed() && playerIsRed)
-                    {
-                        texture = BlueTexture;
+                        piece = GamePieceType.Hidden;
                     }
                 }
 
                 if (texture == null)
                 {
-                    texture = PieceTextures[piece];
+                    texture = ((isRed)?RedPieceTextures:BluePieceTextures)[piece];
                 }
                 spriteBatch.Draw(texture, new Vector2(x, y), Color.White);
             }
         }
 
-        private void RenderPiece(int grid_size, GamePiece piece)
+        private void RenderPiece(int grid_size, GamePieceType piece, bool isRed)
         {
             if (piece > 0)
             {
                 Rectangle rect = new Rectangle(1, 1, grid_size - 1, grid_size - 1);
-                spriteBatch.Draw(pixel, rect, piece.IsBlock() ? Color.Black : piece.IsRed() ? Color.Red : Color.Blue);
+                spriteBatch.Draw(pixel, rect, piece.IsBlock() ? Color.Black : isRed ? Color.Red : Color.Blue);
                 if (!piece.IsBlock() && !piece.IsHidden())
                 {
                     var text = Text[piece.GetPieceType()];
@@ -556,10 +554,6 @@ namespace Stratego.Windows
         public GamePiece LastDefender { get; set; }
 
         public GamePiece LastAttacker { get; set; }
-
-        public Texture2D RedTexture { get; set; }
-
-        public Texture2D BlueTexture { get; set; }
 
         public SignedInGamer Player1 { get; set; }
     }

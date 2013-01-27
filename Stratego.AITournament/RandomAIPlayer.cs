@@ -10,11 +10,13 @@ namespace Stratego.AITournament
     {
         public RandomAIPlayer(StrategoGame game, PlayerTurn playerColor) : base(game, playerColor) { }
 
+
+
         public override void PlacePieces()
         {
             Random rand = new Random(Environment.TickCount);
 
-            List<KeyValuePair<GamePiece, int>> pieces = _game.GetAvailablePieces(this._playerColor == PlayerTurn.Red);
+            List<KeyValuePair<GamePieceType, int>> pieces = _game.GetAvailablePieces(this._playerColor == PlayerTurn.Red);
             for (int i = 0; i < pieces.Count; i++)
             {
                 if (pieces[i].Value == 0)
@@ -29,7 +31,7 @@ namespace Stratego.AITournament
                 {
                     for (int y = 0; y < 4; y++)
                     {
-                        if (_game.GetPiece(new Stratego.Core.Point(x, y)) == GamePiece.Empty)
+                        if (_game.GetPiece(new Stratego.Core.Point(x, y)) == null)
                         {
                             PlacePiece(rand, pieces, x, y);
                         }
@@ -39,7 +41,7 @@ namespace Stratego.AITournament
                 {
                     for (int y = 6; y < 10; y++)
                     {
-                        if (_game.GetPiece(new Stratego.Core.Point(x, y)) == GamePiece.Empty)
+                        if (_game.GetPiece(new Stratego.Core.Point(x, y)) == null)
                         {
                             PlacePiece(rand, pieces, x, y);
                         }
@@ -48,11 +50,11 @@ namespace Stratego.AITournament
             }
         }
 
-        private void PlacePiece(Random rand, List<KeyValuePair<GamePiece, int>> pieces, int x, int y)
+        private void PlacePiece(Random rand, List<KeyValuePair<GamePieceType, int>> pieces, int x, int y)
         {
             int r = rand.Next(pieces.Count);
-            _game.PlacePiece(pieces[r].Key, new Stratego.Core.Point(x, y));
-            pieces[r] = new KeyValuePair<GamePiece, int>(pieces[r].Key, pieces[r].Value - 1);
+            _game.PlacePiece(pieces[r].Key, this.IsRed, new Stratego.Core.Point(x, y));
+            pieces[r] = new KeyValuePair<GamePieceType, int>(pieces[r].Key, pieces[r].Value - 1);
             if (pieces[r].Value == 0)
             {
                 pieces.RemoveAt(r);
@@ -67,7 +69,7 @@ namespace Stratego.AITournament
 
             var attacker = movable[r.Next(movable.Length)];
             var move = attacker.Value[r.Next(attacker.Value.Length)];
-            if (_game.GetBoard()[move.x, move.y] != 0)
+            if (_game.GetBoard()[move.x, move.y] != null)
             {
                 var suc = _game.Attack(attacker.Key, move);
             }
@@ -87,21 +89,57 @@ namespace Stratego.AITournament
                 for (int y = 0; y < 10; y++)
                 {
                     var piece = board[x, y];
-                    if (piece != 0 && IsRed == piece.IsRed())
+                    if (piece != null && IsRed == piece.IsRed)
                     {
                         bool canMove = false;
                         List<Point> moves = new List<Point>();
-                        if (_game.IsValidMove(piece, new Point(x, y), new Point(x - 1, y))) {
-                            moves.Add(new Point(x - 1, y));
+                        for (int dx = -1; x + dx > 0 && x + dx < 10; dx--)
+                        {
+                            var dest = new Point(x + dx, y);
+                            if (_game.IsValidMove(piece, new Point(x, y), dest))
+                            {
+                                moves.Add(dest);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
-                        if (_game.IsValidMove(piece, new Point(x, y), new Point(x + 1, y))) {
-                            moves.Add(new Point(x + 1, y));
+                        for (int dx = 1; x + dx > 0 && x + dx < 10; dx++)
+                        {
+                            var dest = new Point(x + dx, y);
+                            if (_game.IsValidMove(piece, new Point(x, y), dest))
+                            {
+                                moves.Add(dest);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
-                        if (_game.IsValidMove(piece, new Point(x, y), new Point(x, y - 1))) {
-                            moves.Add(new Point(x, y - 1));
+                        for (int dy = -1; y + dy > 0 && y + dy < 10; dy--)
+                        {
+                            var dest = new Point(x, y + dy);
+                            if (_game.IsValidMove(piece, new Point(x, y), dest))
+                            {
+                                moves.Add(dest);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
-                        if (_game.IsValidMove(piece, new Point(x, y), new Point(x, y + 1))) {
-                            moves.Add(new Point(x, y + 1));
+                        for (int dy = 1; y + dy > 0 && y + dy < 10; dy++)
+                        {
+                            var dest = new Point(x, y + dy);
+                            if (_game.IsValidMove(piece, new Point(x, y), dest))
+                            {
+                                moves.Add(dest);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
 
                         if (moves.Count > 0)

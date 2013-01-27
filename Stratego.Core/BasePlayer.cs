@@ -18,11 +18,14 @@ namespace Stratego.Core
             IsRed = playerColor == PlayerTurn.Red;
         }
 
+        public abstract void EndSetup();
+
         public abstract void BeginTurn();
-        //public abstract void EndTurn();
+
+        public abstract void PlayerMoved(Point from, Point to);
+
+        public abstract void PlayerAttacked(Point from, Point to, GamePieceType piece, AttackResult result);
 
         public abstract void PlacePieces();
-
-        
     }
 }

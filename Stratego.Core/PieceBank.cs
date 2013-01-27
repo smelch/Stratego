@@ -9,7 +9,8 @@ namespace Stratego.Core
     [Serializable]
     public class PieceBank
     {
-        private Dictionary<GamePiece, int> bank { get; set; }
+        private Dictionary<GamePieceType, List<GamePiece>> bank { get; set; }
+        private Dictionary<GamePieceType, List<GamePiece>> redBank { get; set; }
 
         public PieceBank()
         {
@@ -17,70 +18,69 @@ namespace Stratego.Core
 
         public void Initialize()
         {
-            bank = new Dictionary<GamePiece, int>()
-            {
-                {GamePiece.Bomb, 6},
-                {GamePiece.One, 1},
-                {GamePiece.Two, 1},
-                {GamePiece.Three, 2},
-                {GamePiece.Four, 3},
-                {GamePiece.Five, 4},
-                {GamePiece.Six,  4},
-                {GamePiece.Seven, 4},
-                {GamePiece.Eight, 5},
-                {GamePiece.Nine, 8},
-                {GamePiece.Spy, 1},
-                {GamePiece.Flag, 1},
-
-                {GamePiece.Bomb | GamePiece.Red, 6},
-                {GamePiece.One | GamePiece.Red, 1},
-                {GamePiece.Two | GamePiece.Red, 1},
-                {GamePiece.Three | GamePiece.Red, 2},
-                {GamePiece.Four | GamePiece.Red, 3},
-                {GamePiece.Five | GamePiece.Red, 4},
-                {GamePiece.Six | GamePiece.Red, 4},
-                {GamePiece.Seven | GamePiece.Red, 4},
-                {GamePiece.Eight | GamePiece.Red, 5},
-                {GamePiece.Nine | GamePiece.Red, 8},
-                {GamePiece.Spy | GamePiece.Red, 1},
-                {GamePiece.Flag | GamePiece.Red, 1}
-
-            };
+            bank = new Dictionary<GamePieceType, List<GamePiece>>();
+            redBank = new Dictionary<GamePieceType, List<GamePiece>>();
+            AddPieces(GamePieceType.Bomb, 6);
+            AddPieces(GamePieceType.One, 1);
+            AddPieces(GamePieceType.Two, 1);
+            AddPieces(GamePieceType.Three, 2);
+            AddPieces(GamePieceType.Four, 3);
+            AddPieces(GamePieceType.Five, 4);
+            AddPieces(GamePieceType.Six,  4);
+            AddPieces(GamePieceType.Seven, 4);
+            AddPieces(GamePieceType.Eight, 5);
+            AddPieces(GamePieceType.Nine, 8);
+            AddPieces(GamePieceType.Spy, 1);
+            AddPieces(GamePieceType.Flag, 1);
         }
 
-        public bool PlacePiece(GamePiece piece)
+        private void AddPieces(GamePieceType gamePieceType,int count)
         {
-            if (bank[piece] > 0)
+            List<GamePiece> pieces = new List<GamePiece>();
+            List<GamePiece> redPieces = new List<GamePiece>();
+            for (int i = 0; i < count; i++)
             {
-                bank[piece]--;
+                pieces.Add(GamePieceFactory.Create(gamePieceType, false));
+                redPieces.Add(GamePieceFactory.Create(gamePieceType, true));
+            }
+            bank.Add(gamePieceType, pieces);
+            redBank.Add(gamePieceType, redPieces);
+        }
 
-                return true;
+        public GamePiece PlacePiece(GamePieceType piece, bool red)
+        {
+            var b = (red) ? redBank : bank;
+            GamePiece ret = null;
+
+            if (b[piece].Count > 0)
+            {
+                ret = b[piece][0];
+                b[piece].RemoveAt(0);
             }
 
-            return false;
+            return ret;
         }
 
-        public int PieceCount(GamePiece piece)
+        public int PieceCount(GamePieceType piece, bool red)
         {
-            return bank[piece];
+            var b = (red) ? redBank : bank;
+            return b[piece].Count;
         }
 
 
         internal void ReturnPiece(GamePiece Piece)
         {
-            bank[Piece]++;
+            var b = (Piece.IsRed) ? redBank : bank;
+            b[Piece.Type].Add(Piece);
         }
 
-        internal List<KeyValuePair<GamePiece, int>> GetAllAvailablePieces(bool red)
+        internal List<KeyValuePair<GamePieceType, int>> GetAllAvailablePieces(bool red)
         {
-            var ret = new List<KeyValuePair<GamePiece, int>>();
-
-            foreach (var kvp in bank)
+            var ret = new List<KeyValuePair<GamePieceType, int>>();
+            var b = (red) ? redBank : bank;
+            foreach (var kvp in b)
             {
-                if (kvp.Key.IsRed() == red)
-                {
-                    ret.Add(new KeyValuePair<GamePiece, int>(kvp.Key, kvp.Value));
-                }
+                ret.Add(new KeyValuePair<GamePieceType, int>(kvp.Key, kvp.Value.Count));
             }
 
             return ret;

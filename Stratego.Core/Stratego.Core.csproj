@@ -41,12 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AttackResult.cs" />
     <Compile Include="BaseAIPlayer.cs" />
+    <Compile Include="BombGamePiece.cs" />
+    <Compile Include="EightGamePiece.cs" />
+    <Compile Include="FlagGamePiece.cs" />
+    <Compile Include="GamePiece.cs" />
+    <Compile Include="GamePieceFactory.cs" />
     <Compile Include="PieceBank.cs" />
     <Compile Include="BasePlayer.cs" />
     <Compile Include="Point.cs" />
+    <Compile Include="SpyGamePiece.cs" />
     <Compile Include="StrategoGame.cs" />
-    <Compile Include="GamePiece.cs" />
+    <Compile Include="GamePieceType.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="PlayerTurn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

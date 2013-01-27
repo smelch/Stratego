@@ -5,51 +5,28 @@ using System.Text;
 
 namespace Stratego.Core
 {
-    public enum GamePiece : byte
+    public class GamePiece
     {
-        Empty = 0,
-        One = 1,
-        Two = 2,
-        Three = 3,
-        Four = 4,
-        Five = 5,
-        Six = 6,
-        Seven = 7,
-        Eight = 8,
-        Nine = 9,
-        Spy = 10,
-        Bomb = 11,
-        Flag = 12,
-        Red = 16,
-        Block = 32,
-        Hidden = 64
-    }
+        public GamePieceType Type { get; set; }
+        public bool IsRed { get; set; }
 
-    public static class GamePieceExtensions
-    {
-        public static bool IsRed(this GamePiece piece)
+        public GamePiece(GamePieceType gamePieceType, bool IsRed)
         {
-            return (piece & GamePiece.Red) == GamePiece.Red;
+            Type = gamePieceType;
+            this.IsRed = IsRed;
         }
-
-        public static bool IsBlue(this GamePiece piece)
+        
+        public virtual AttackResult Attack(GamePiece defender)
         {
-            return (piece & GamePiece.Red) == 0;
-        }
+            switch(Math.Sign(defender.Type - Type)) {
+                case -1:
+                    return AttackResult.Lose;
+                case 0:
+                    return AttackResult.Tie;
+                    
+            }
 
-        public static bool IsBlock(this GamePiece piece)
-        {
-            return piece == GamePiece.Block;
-        }
-
-        public static bool IsHidden(this GamePiece piece)
-        {
-            return (piece & GamePiece.Hidden) == GamePiece.Hidden;
-        }
-
-        public static GamePiece GetPieceType(this GamePiece piece)
-        {
-            return piece & (GamePiece)15;
+            return AttackResult.Win;
         }
     }
 }

@@ -13,19 +13,22 @@ namespace Stratego.Core
         private GameState state;
         private PieceBank bank;
 
+        public BasePlayer Red { get; set; }
+        public BasePlayer Blue { get; set; }
+
         public StrategoGame()
         {
             bank = new PieceBank();
             bank.Initialize();
             state = new GameState();
-            state.Board[2, 4] = GamePiece.Block;
-            state.Board[2, 5] = GamePiece.Block;
-            state.Board[3, 4] = GamePiece.Block;
-            state.Board[3, 5] = GamePiece.Block;
-            state.Board[6, 4] = GamePiece.Block;
-            state.Board[6, 5] = GamePiece.Block;
-            state.Board[7, 4] = GamePiece.Block;
-            state.Board[7, 5] = GamePiece.Block;
+            state.Board[2, 4] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[2, 5] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[3, 4] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[3, 5] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[6, 4] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[6, 5] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[7, 4] = GamePieceFactory.Create(GamePieceType.Block, false);
+            state.Board[7, 5] = GamePieceFactory.Create(GamePieceType.Block, false);
         }
 
         public StrategoGame(GameState state)
@@ -33,26 +36,31 @@ namespace Stratego.Core
             this.state = state;
         }
 
-        public bool PlacePiece(GamePiece Piece, Point p)
+        public bool PlacePiece(GamePieceType pieceType, bool red, Point p)
         {
             if (state.Turn == PlayerTurn.Setup)
             {
-                if (Piece.IsBlue())
+                if (red)
                 {
+                    if (p.y < 6)
+                    {
+                        return false;
+                    }
+                } else {
                     if (p.y > 3)
                     {
                         return false;
                     }  
-                } else {
-                    if(p.y < 6) {
-                        return false;
-                    }
                 }
                 
-                if(state.Board[p.x, p.y] == 0 && bank.PlacePiece(Piece))
+                if(state.Board[p.x, p.y] == null)
                 {
-                    state.Board[p.x, p.y] = Piece;
-                    return true;
+                    var piece = bank.PlacePiece(pieceType, red);
+                    if (piece != null)
+                    {
+                        state.Board[p.x, p.y] = piece;
+                        return true;
+                    }
                 }    
 
             }
@@ -62,75 +70,87 @@ namespace Stratego.Core
 
         public bool RemovePiece(Point p) {
             var Piece = GetPiece(p);
-            state.Board[p.x, p.y] = GamePiece.Empty;
+            state.Board[p.x, p.y] = null;
             bank.ReturnPiece(Piece);
             return true;
         }
 
-
         public bool Move(Point from, Point to) 
         {
             PlayerTurn turn = GetTurn();
-            GamePiece piece = GetPiece(from);
-            GamePiece destinationPiece = GetPiece(to);
+            var piece = GetPiece(from);
+            var destinationPiece = GetPiece(to);
 
-            var PieceType = piece.GetPieceType();
+            var PieceType = piece.Type;
 
             if (IsValidMove(piece, from, to))
             {
-                state.Board[from.x, from.y] = 0;
-                if (destinationPiece != 0)
+                state.Board[from.x, from.y] = null;
+                if (destinationPiece != null)
                 {
                     throw new Exception("Destination is occupied.");
                 }
                 state.Board[to.x, to.y] = piece;
-                state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
+                if (state.Turn == PlayerTurn.Red)
+                {
+                    state.Turn = PlayerTurn.Blue;
+                    Blue.PlayerMoved(from, to);
+                }
+                else
+                {
+                    state.Turn = PlayerTurn.Red;
+                    Red.PlayerMoved(from, to);
+                }
+
                 return true;
             }
 
             return false;
         }
 
-        public GamePiece Attack(Point from, Point to)
+        public AttackResult Attack(Point from, Point to)
         {
 
             var defender = GetPiece(to);
             var attacker = GetPiece(from);
 
-            if (IsValidMove(attacker, from, to))
+            if (!IsValidMove(attacker, from, to))
             {
-                bool? success = null;
-                
-                if (defender.GetPieceType() == GamePiece.Bomb) { success = attacker.GetPieceType() == GamePiece.Eight; }
-                else if (attacker.GetPieceType() == GamePiece.Spy) { success = true; }
-                else if (defender.GetPieceType() == GamePiece.Flag) { success = true; }
-                else if (defender.GetPieceType() == GamePiece.Spy) { success = true; }
+                throw new Exception("Invalid move");
+            }
 
-                if ((success.HasValue && success.Value) || (!success.HasValue && attacker.GetPieceType() < defender.GetPieceType()))
-                {
-                    if (defender.GetPieceType() == GamePiece.Flag)
-                    {
-                        IsOver = true;
-                    }
+            var result = attacker.Attack(defender);
+            switch (result)
+            {
+                case AttackResult.Win:
                     RemovePiece(to);
-                    state.Board[from.x, from.y] = 0;
+                    state.Board[from.x, from.y] = null;
                     state.Board[to.x, to.y] = attacker;
-                }
-                else
-                {
-                    RemovePiece(from);
-                    if (!success.HasValue && attacker.GetPieceType() == defender.GetPieceType())
+                    if (defender.Type == GamePieceType.Flag)
                     {
-                        RemovePiece(to);
+                        this.IsOver = true;
                     }
-                }
-                state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
-                return defender;
+                    break;
+                case AttackResult.Lose:
+                    RemovePiece(from);
+                    break;
+                case AttackResult.Tie:
+                    RemovePiece(from);
+                    RemovePiece(to);
+                    break;
+            }
+
+            if (state.Turn == PlayerTurn.Red)
+            {
+                state.Turn = PlayerTurn.Blue;
+                Blue.PlayerAttacked(from, to, attacker.Type, result);
             }
             else
             {
-                return (GamePiece)0;
+                state.Turn = PlayerTurn.Red;
+                Red.PlayerAttacked(from, to, attacker.Type, result);
             }
+            return result;
         }
 
         public bool IsValidMove(GamePiece Piece, Point from, Point to)
@@ -148,17 +168,17 @@ namespace Stratego.Core
             int deltaX = to.x - from.x;
             int deltaY = to.y - from.y;
 
-            if (Piece.IsRed() && state.Turn != PlayerTurn.Red || !Piece.IsRed() && state.Turn == PlayerTurn.Red)
+            if (Piece.IsRed && state.Turn != PlayerTurn.Red || !Piece.IsRed && state.Turn == PlayerTurn.Red)
             {
                 return false;
             }
 
-            if (Piece.GetPieceType() == GamePiece.Bomb || Piece.GetPieceType() == GamePiece.Flag || Piece == GamePiece.Block)
+            if (Piece.Type == GamePieceType.Bomb || Piece.Type == GamePieceType.Flag || Piece.Type == GamePieceType.Block)
             {
                 return false;
             }
 
-            if (GetPiece(to) != GamePiece.Empty && GetPiece(to).IsRed() == Piece.IsRed())
+            if (GetPiece(to) != null && GetPiece(to).IsRed == Piece.IsRed)
             {
                 return false;
             }
@@ -169,13 +189,13 @@ namespace Stratego.Core
             }
 
             //Nine Movement
-            if (Piece.GetPieceType() == GamePiece.Nine)
+            if (Piece.Type == GamePieceType.Nine)
             {
                 Point offset = new Point(Math.Sign(deltaX), Math.Sign(deltaY));
 
                 while ((from += offset) != to)
                 {
-                    if (GetPiece(from) != 0)
+                    if (GetPiece(from) != null)
                     {
                         return false;
                     }
@@ -190,12 +210,12 @@ namespace Stratego.Core
                 }
             }
             
-            GamePiece destination = GetPiece(to);
-            if (destination == GamePiece.Empty)
+            var destination = GetPiece(to);
+            if (destination == null)
             {
                 return true;
             }
-            if (destination == GamePiece.Block || destination.IsRed() == Piece.IsRed())
+            if (destination.Type == GamePieceType.Block || destination.IsRed == Piece.IsRed)
             {
                 return false;
             }
@@ -208,14 +228,16 @@ namespace Stratego.Core
             return state.Board[p.x, p.y];
         }
 
-        public int GetAvailablePieces(GamePiece piece)
+        public int GetAvailablePieces(GamePieceType piece, bool red)
         {
-            return bank.PieceCount(piece);
+            return bank.PieceCount(piece, red);
         }
 
         public void EndSetup()
         {
             state.Turn = PlayerTurn.Red;
+            Red.EndSetup();
+            Blue.EndSetup();
         }
 
         public PlayerTurn GetTurn()
@@ -223,7 +245,7 @@ namespace Stratego.Core
             return state.Turn;
         }
 
-        public List<KeyValuePair<GamePiece, int>> GetAvailablePieces(bool red)
+        public List<KeyValuePair<GamePieceType, int>> GetAvailablePieces(bool red)
         {
             return bank.GetAllAvailablePieces(red);
         }
