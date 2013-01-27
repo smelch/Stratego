@@ -5,7 +5,6 @@ using System.Text;
 
 namespace Stratego.Core
 {
-    [Flags]
     public enum GamePiece : byte
     {
         Empty = 0,

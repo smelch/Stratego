@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D4B2B4F7-1E8F-4A08-AD14-4A00EC61497E}</ProjectGuid>
+    <ProjectGuid>{4FA2813C-B7BA-42E5-99FD-DED2F505737B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Stratego.Core</RootNamespace>
-    <AssemblyName>Stratego.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <RootNamespace>Stratego.AITournament</RootNamespace>
+    <AssemblyName>Stratego.AITournament</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,7 +32,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,15 +39,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseAIPlayer.cs" />
-    <Compile Include="PieceBank.cs" />
-    <Compile Include="BasePlayer.cs" />
-    <Compile Include="Point.cs" />
-    <Compile Include="StrategoGame.cs" />
-    <Compile Include="GamePiece.cs" />
-    <Compile Include="GameState.cs" />
-    <Compile Include="PlayerTurn.cs" />
+    <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RandomAIPlayer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Stratego.Core\Stratego.Core.csproj">
+      <Project>{d4b2b4f7-1e8f-4a08-ad14-4a00ec61497e}</Project>
+      <Name>Stratego.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

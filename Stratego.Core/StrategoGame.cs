@@ -67,33 +67,31 @@ namespace Stratego.Core
             return true;
         }
 
-        public bool MovePiece(Point from, Point to) 
+
+        public bool Move(Point from, Point to) 
         {
             PlayerTurn turn = GetTurn();
             GamePiece piece = GetPiece(from);
             GamePiece destinationPiece = GetPiece(to);
 
-            //if ((piece.IsRed() && turn == PlayerTurn.Red) || (!piece.IsRed() && turn == PlayerTurn.Blue))
-            //{
-                var PieceType = piece.GetPieceType();
+            var PieceType = piece.GetPieceType();
 
-                if (IsValidMove(piece, from, to))
+            if (IsValidMove(piece, from, to))
+            {
+                state.Board[from.x, from.y] = 0;
+                if (destinationPiece != 0)
                 {
-                    state.Board[from.x, from.y] = 0;
-                    if (destinationPiece != 0)
-                    {
-                        throw new Exception("Destination is occupied.");
-                    }
-
-                    state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
-                    return true;
+                    throw new Exception("Destination is occupied.");
                 }
-            //}
+
+                state.Turn = (state.Turn == PlayerTurn.Red) ? PlayerTurn.Blue : PlayerTurn.Red;
+                return true;
+            }
 
             return false;
         }
 
-        public bool Attack(Point from, Point to)
+        public GamePiece Attack(Point from, Point to)
         {
 
             var defender = GetPiece(to);
@@ -109,6 +107,10 @@ namespace Stratego.Core
 
                 if ((success.HasValue && success.Value) || (!success.HasValue && attacker < defender))
                 {
+                    if (defender == GamePiece.Flag)
+                    {
+                        IsOver = true;
+                    }
                     RemovePiece(to);
                     state.Board[to.x, to.y] = attacker;
                 }
@@ -118,16 +120,21 @@ namespace Stratego.Core
                     RemovePiece(to);
                 }
 
-                return true;
+                return defender;
             }
             else
             {
-                return false;
+                return (GamePiece)0;
             }
         }
 
         public bool IsValidMove(GamePiece Piece, Point from, Point to)
         {
+            if (this.IsOver)
+            {
+                return false;
+            }
+
             int deltaX = to.x - from.x;
             int deltaY = to.y - from.y;
 
@@ -232,5 +239,7 @@ namespace Stratego.Core
         {
             return (GamePiece[,])state.Board.Clone();
         }
+
+        public bool IsOver { get; set; }
     }
 }
