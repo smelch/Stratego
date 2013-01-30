@@ -50,6 +50,7 @@
     <Compile Include="GamePieceFactory.cs" />
     <Compile Include="PieceBank.cs" />
     <Compile Include="BasePlayer.cs" />
+    <Compile Include="PlayerFactory.cs" />
     <Compile Include="Point.cs" />
     <Compile Include="SpyGamePiece.cs" />
     <Compile Include="StrategoGame.cs" />

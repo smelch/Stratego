@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -27,20 +28,29 @@ namespace Stratego.Windows
         BasePlayer Red, Blue;
         double timer = 0;
         double timedSpeed = 2;
+
+        int playerSelectionRed = 0;
+        int playerSelectionBlue = 0; 
         
         bool playerIsRed = true;
 
         Dictionary<GamePieceType, string> Text;
         SpriteFont Font;
-        private bool spaceDown;
+
         private Dictionary<GamePieceType, Texture2D> RedPieceTextures, BluePieceTextures;
         private GamePiece ActivePiece;
-        private bool mouseDown;
+        
         private NetworkSession session;
         private int redWins;
-        private int totalGames;
+        private int totalGames, gameLimit = -1;
         private double ratio;
-        
+        private bool spaceDown;
+        private bool mouseDown;
+        private bool downKeyDown;
+        private bool enterKeyDown;
+        string[] playerTypes;
+
+        PlayerFactory playerFactory;
 
         public Game1()
         {
@@ -104,13 +114,12 @@ namespace Stratego.Windows
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            StartNewGame();
-
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData<Color>(new Color[] { Color.White });
             Font = Content.Load<SpriteFont>("PieceFont");
+            Assembly.LoadFrom("Stratego.AITournament.dll");
 
             Text = new Dictionary<GamePieceType, string>() {
                 { GamePieceType.One, "1" },
@@ -129,7 +138,8 @@ namespace Stratego.Windows
 
             RedPieceTextures = new Dictionary<GamePieceType, Texture2D>();
             BluePieceTextures = new Dictionary<GamePieceType, Texture2D>();
-
+            playerFactory = new PlayerFactory();
+            playerTypes = playerFactory.GetPlayerNames();
             foreach (GamePieceType piece in Enum.GetValues(typeof(GamePieceType)))
             {
                 BluePieceTextures.Add(piece, RenderPieceTexture(GRID_SIZE, GRID_SIZE, piece, false));
@@ -139,15 +149,15 @@ namespace Stratego.Windows
                 }
             }
 
-            // TODO: use this.Content to load your game content here
+            StartNewGame();
         }
 
         private void StartNewGame()
         {
             playerIsRed = true;
             stratego = new StrategoGame();
-            Red = new RetreatAIPlayer(stratego, PlayerTurn.Red);
-            Blue = new RandomAIPlayer(stratego, PlayerTurn.Blue);
+            Red = playerFactory.Create(playerTypes[playerSelectionRed], stratego, PlayerTurn.Red);
+            Blue = playerFactory.Create(playerTypes[playerSelectionBlue], stratego, PlayerTurn.Blue);
             stratego.Red = Red;
             stratego.Blue = Blue;
             Red.PlacePieces();
@@ -189,27 +199,46 @@ namespace Stratego.Windows
         {
             if (!Guide.IsVisible && !stratego.IsOver)
             {
-                timer += gameTime.ElapsedGameTime.TotalMilliseconds;
-                while (timer > timedSpeed && !stratego.IsOver)
+                if (totalGames <= gameLimit)
                 {
-                    if (playerIsRed)
+                    timer += gameTime.ElapsedGameTime.TotalMilliseconds;
+                    while (timer > timedSpeed && !stratego.IsOver)
                     {
-                        Red.BeginTurn();
+                        if (playerIsRed)
+                        {
+                            Red.BeginTurn();
+                        }
+                        else
+                        {
+                            Blue.BeginTurn();
+                        }
+                        playerIsRed = !playerIsRed;
+                        timer -= timedSpeed;
+                        if (stratego.IsOver)
+                        {
+                            redWins += (stratego.GetTurn() == PlayerTurn.Red) ? 1 : 0;
+                            totalGames++;
+                            ratio = (double)redWins / (double)totalGames;
+                        }
                     }
-                    else
-                    {
-                        Blue.BeginTurn();
-                    }
-                    playerIsRed = !playerIsRed;
-                    timer -= timedSpeed;
-                }
 
-                if (stratego.IsOver)
+                    if (stratego.IsOver)
+                    {
+                        if(totalGames < gameLimit) {
+                            StartNewGame();
+                        } else {
+                            if(Keyboard.GetState().IsKeyDown(Keys.Enter)) {
+                                enterKeyDown = true;
+                                timer = 0;
+                                gameLimit = -1;
+                                totalGames = 0;
+                            }
+                        }
+                    }
+                }
+                else
                 {
-                    redWins += (stratego.GetTurn() == PlayerTurn.Red) ? 1 : 0;
-                    totalGames++;
-                    ratio = (double)redWins / (double)totalGames;
-                    StartNewGame();
+                    UpdatePlayerSelection(gameTime);
                 }
                 //if (Player1 == null)
                 //{
@@ -245,6 +274,57 @@ namespace Stratego.Windows
                 //HandleMouse();
             }
             base.Update(gameTime);
+        }
+
+        private void UpdatePlayerSelection(GameTime gameTime)
+        {
+            if(Keyboard.GetState().IsKeyDown(Keys.Down)) {
+                if (!downKeyDown)
+                {
+                    downKeyDown = true;
+                    if (playerIsRed)
+                    {
+                        playerSelectionRed++;
+                        if (playerSelectionRed == playerTypes.Length)
+                        {
+                            playerSelectionRed = 0;
+                        }
+                    }
+                    else
+                    {
+                        playerSelectionBlue++;
+                        if (playerSelectionBlue == playerTypes.Length)
+                        {
+                            playerSelectionBlue = 0;
+                        }
+                    }
+                }
+            } else {
+                if(downKeyDown) downKeyDown = false;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Space))
+            {
+                if (!spaceDown)
+                {
+                    spaceDown = true;
+                    playerIsRed = !playerIsRed;
+                }
+            }
+            else
+            {
+                if (spaceDown) spaceDown = false;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+            {
+                if (!enterKeyDown)
+                {
+                    enterKeyDown = true;
+                    gameLimit = 50;
+                    totalGames = 0;
+                }
+            }
         }
 
         private void RandomizeRemainingPieces()
@@ -439,6 +519,36 @@ namespace Stratego.Windows
 
             // TODO: Add your drawing code here
             spriteBatch.Begin();
+            if (totalGames <= gameLimit)
+            {
+                DrawGame();
+            }
+            else
+            {
+                DrawMenu();
+            }
+            spriteBatch.End();
+            base.Draw(gameTime);
+        }
+
+        private void DrawMenu()
+        {
+            var dim = Font.MeasureString(" ");
+            spriteBatch.DrawString(Font, "Red Player", new Vector2(10, 10), Color.White);
+            spriteBatch.DrawString(Font, "Blue Player", new Vector2(300, 10), Color.White);
+            for (int i = 0; i < playerTypes.Length; i++)
+            {
+                Color c = (i == playerSelectionRed) ? Color.Red : Color.Black;
+                spriteBatch.DrawString(Font, playerTypes[i], new Vector2(10, dim.Y * (i + 1) + 10), c);
+                c = (i == playerSelectionBlue) ? Color.Red : Color.Black;
+                spriteBatch.DrawString(Font, playerTypes[i], new Vector2(300, dim.Y * (i + 1) + 10), c);
+            }
+
+            spriteBatch.DrawString(Font, "Press Enter To Start", new Vector2(10, 400), Color.White);
+        }
+
+        private void DrawGame()
+        {
             DrawGrid();
             DrawPieces();
             if (stratego.GetTurn() == PlayerTurn.Setup)
@@ -450,8 +560,13 @@ namespace Stratego.Windows
                 DrawLastAttack();
             }
             DrawActivePiece();
-            spriteBatch.End();
-            base.Draw(gameTime);
+            DrawScoreboard();
+        }
+
+        private void DrawScoreboard()
+        {
+            spriteBatch.DrawString(Font, String.Format("{0}: {1}", playerTypes[playerSelectionRed], redWins), new Vector2(500, 10), Color.Red);
+            spriteBatch.DrawString(Font, String.Format("{0}: {1}", playerTypes[playerSelectionBlue], totalGames - redWins), new Vector2(500, 30), Color.Blue);
         }
 
         private void DrawLastAttack()
